@@ -1,0 +1,24 @@
+name: ecommerce_task6
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ^5.8.0+1
+  get: ^4.7.2
+  webview_flutter: ^4.10.0
+  shared_preferences: ^2.5.2
+  get_storage_pro: ^0.1.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
