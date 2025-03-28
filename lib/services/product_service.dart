@@ -4,13 +4,19 @@ import '../models/product_model.dart';
 import '../models/category_model.dart';
 
 class ProductService extends GetxService {
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://tokopaedi.arfani.my.id/api/',
-    connectTimeout: Duration(seconds: 10),
-    receiveTimeout: Duration(seconds: 10),
-  ));
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: 'https://tokopaedi.arfani.my.id/api/',
+      connectTimeout: Duration(seconds: 10),
+      receiveTimeout: Duration(seconds: 10),
+      headers: {'Accept': 'application/json'},
+    ),
+  );
 
-  Future<List<ProductModel>> fetchProducts({String? search, int? categoryId}) async {
+  Future<List<ProductModel>> fetchProducts({
+    String? search,
+    int? categoryId,
+  }) async {
     try {
       final queryParams = <String, dynamic>{};
       if (search != null) queryParams['search'] = search;
@@ -35,7 +41,9 @@ class ProductService extends GetxService {
 
       if (response.statusCode == 200) {
         final List<dynamic> categoryList = response.data['data'];
-        return categoryList.map((json) => CategoryModel.fromJson(json)).toList();
+        return categoryList
+            .map((json) => CategoryModel.fromJson(json))
+            .toList();
       }
       return [];
     } catch (e) {

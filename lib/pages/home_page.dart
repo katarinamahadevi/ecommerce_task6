@@ -1,9 +1,9 @@
 import 'package:ecommerce_task6/controller/cart_controller.dart';
 import 'package:ecommerce_task6/controller/product_controller.dart';
+import 'package:ecommerce_task6/widgets/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/product_model.dart';
-import '../models/category_model.dart';
 
 class HomePage extends StatelessWidget {
   final ProductController _productController = Get.find<ProductController>();
@@ -12,38 +12,41 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100], // Abu-abu cerah sebagai background
       appBar: AppBar(
-        
-        title: Text('Tokopaedi'),
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 1,
+        title: Text(
+          'Tokopaedi',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         actions: [
-          // Cart Icon dengan Badge
           Obx(() {
             final cartItemCount = _cartController.cartItems.length;
             return Stack(
               alignment: Alignment.topRight,
               children: [
                 IconButton(
-                  icon: Icon(Icons.shopping_cart),
-                  onPressed: () => Get.toNamed('/cart'), // Ini sudah benar
+                  icon: Icon(Icons.shopping_cart, color: Colors.black),
+                  onPressed: () => Get.toNamed('/cart'),
                 ),
-
-                // ... badge code
                 if (cartItemCount > 0)
                   Positioned(
-                    right: 6,
-                    top: 6,
+                    right: 8,
+                    top: 8,
                     child: Container(
-                      padding: EdgeInsets.all(2),
+                      padding: EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      constraints: BoxConstraints(minWidth: 16, minHeight: 16),
+                      constraints: BoxConstraints(minWidth: 18, minHeight: 18),
                       child: Text(
                         '$cartItemCount',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
@@ -59,35 +62,49 @@ class HomePage extends StatelessWidget {
         children: [
           // Search Bar
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(12.0),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search products...',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, color: Colors.black),
+                filled: true,
+                fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
                 ),
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
               ),
               onChanged: (value) {
                 _productController.setSearchQuery(value);
               },
             ),
           ),
-
           // Product List
           Expanded(
             child: Obx(() {
               if (_productController.isLoading) {
-                return Center(child: CircularProgressIndicator());
+                return Center(
+                  child: CircularProgressIndicator(color: Colors.black),
+                );
               }
-
               if (_productController.products.isEmpty) {
-                return Center(child: Text('No products found'));
+                return Center(
+                  child: Text(
+                    'No products found',
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
+                );
               }
-
-              return ListView.builder(
+              return GridView.builder(
                 padding: EdgeInsets.all(8),
                 itemCount: _productController.products.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // Membuat grid 2 kolom
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.7, // Proporsi card lebih ramping
+                ),
                 itemBuilder: (context, index) {
                   final product = _productController.products[index];
                   return ProductCard(
@@ -111,27 +128,7 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              // Already on home
-              break;
-            case 1:
-              Get.toNamed('/orders');
-              break;
-            case 2:
-              Get.toNamed('/profile');
-              break;
-          }
-        },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Orders'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
+      bottomNavigationBar: BottomNavBar(currentIndex: 0),
     );
   }
 }
@@ -152,107 +149,102 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Card(
-        elevation: 4,
-        margin: EdgeInsets.symmetric(vertical: 8),
-        child: Row(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          // boxShadow: [
+          //   BoxShadow(color: Colors.black12, blurRadius: 6, spreadRadius: 2),
+          // ],
+        ),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Product Image
-            Container(
-              width: 120,
-              height: 120,
-              child: Image.network(
-                product.image,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(child: Icon(Icons.image_not_supported));
-                },
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              child: Container(
+                height: 140,
+                width: double.infinity,
+                child: Image.network(
+                  product.image,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
 
             // Product Details
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Product Name
-                    Text(
-                      product.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Name
+                  Text(
+                    product.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 5),
+
+                  // Product Description
+                  Text(
+                    product.description,
+                    style: TextStyle(color: Colors.grey[700]),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 8),
+
+                  // Price and Add to Cart Button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        product.rupiah,
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 8),
-
-                    // Product Description
-                    Text(
-                      product.description,
-                      style: TextStyle(color: Colors.grey[700]),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 8),
-
-                    // Price and Add to Cart
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          product.rupiah,
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                      ElevatedButton(
+                        onPressed: onAddToCart,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
                         ),
-                        ElevatedButton(
-                          onPressed: onAddToCart,
-                          child: Text('Add'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: Size(80, 36),
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                          ),
+                        child: Text(
+                          'Add',
+                          style: TextStyle(fontSize: 14, color: Colors.white),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class CategoryChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onSelected;
-
-  const CategoryChip({
-    Key? key,
-    required this.label,
-    required this.isSelected,
-    required this.onSelected,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (_) => onSelected(),
-        selectedColor: Colors.blue[100],
       ),
     );
   }

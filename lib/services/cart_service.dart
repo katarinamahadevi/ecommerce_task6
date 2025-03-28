@@ -1,71 +1,75 @@
 import 'package:dio/dio.dart';
+import 'package:ecommerce_task6/services/storage_service.dart';
 import 'package:get/get.dart';
 import '../models/cart_model.dart';
 import '../models/product_model.dart';
 
-class CartService extends GetxService {
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://tokopaedi.arfani.my.id/api/',
-    connectTimeout: Duration(seconds: 10),
-    receiveTimeout: Duration(seconds: 10),
-  ));
+class CartService {
+  static const String baseUrl = "https://tokopaedi.arfani.my.id/api";
+  static final Dio _dio = Dio();
+  final dio = Dio(BaseOptions(headers: {"Accept": "application/json"}));
+  final StorageService _storageService = Get.put(StorageService());
+  ProfileService() {
+    Get.lazyPut(() => StorageService());
+  }
 
-  Future<List<CartModel>> fetchCartItems(int userId) async {
+  // Get all cart items
+  static Future<List<CartModel>> fetchCartItems(int userId) async {
+    String? token = await StorageService.getToken();
     try {
-      final response = await _dio.get('cart/$userId');
-
+      final response = await _dio.get(
+        "$baseUrl/carts",
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
       if (response.statusCode == 200) {
-        final List<dynamic> cartList = response.data['data'];
-        return cartList.map((json) => CartModel.fromJson(json)).toList();
+        List<dynamic> data = response.data['data'];
+        return data.map((json) => CartModel.fromJson(json)).toList();
+      } else {
+        throw Exception("Failed to load cart items");
       }
-      return [];
     } catch (e) {
-      print('Fetch cart items error: $e');
-      return [];
+      throw Exception("Error fetching cart: $e");
     }
   }
 
-  Future<CartModel?> addToCart(int userId, ProductModel product, int quantity) async {
-    try {
-      final response = await _dio.post('cart', data: {
-        'user_id': userId,
-        'product_id': product.id,
-        'quantity': quantity,
-      });
+  // Add product to cart
+  static Future<bool> addToCart(ProductModel product, int quantity) async {
+    String? token = await StorageService.getToken();
+    if (token == null) throw Exception("Token tidak tersedia");
 
-      if (response.statusCode == 200) {
-        return CartModel.fromJson(response.data['data']);
+    try {
+      final response = await _dio.post(
+        "$baseUrl/carts",
+        data: {"product_id": product.id, "quantity": quantity},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print(response.data['message']); // Log pesan sukses
+        return true; // Berhasil menambahkan ke cart
+      } else {
+        print("Failed to add to cart: ${response.statusCode}");
+        return false;
       }
-      return null;
     } catch (e) {
-      print('Add to cart error: $e');
-      return null;
+      print("Error adding to cart: $e");
+      return false; // Gagal menambahkan ke cart
     }
   }
 
-  Future<bool> removeFromCart(int cartItemId) async {
+  static Future<bool> removeFromCart(int cartId) async {
+    String? token = await StorageService.getToken();
+
     try {
-      final response = await _dio.delete('cart/$cartItemId');
+      final response = await _dio.post(
+        "$baseUrl/carts/remove",
+        data: {"cart_id": cartId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
       return response.statusCode == 200;
     } catch (e) {
-      print('Remove from cart error: $e');
-      return false;
-    }
-  }
-
-  Future<CartModel?> updateCartItemQuantity(int cartItemId, int quantity) async {
-    try {
-      final response = await _dio.put('cart/$cartItemId', data: {
-        'quantity': quantity,
-      });
-
-      if (response.statusCode == 200) {
-        return CartModel.fromJson(response.data['data']);
-      }
-      return null;
-    } catch (e) {
-      print('Update cart item quantity error: $e');
-      return null;
+      throw Exception("Error removing from cart: $e");
     }
   }
 }

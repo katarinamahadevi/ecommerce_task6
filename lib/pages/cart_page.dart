@@ -1,252 +1,158 @@
+import 'package:ecommerce_task6/controller/cart_controller.dart';
+import 'package:ecommerce_task6/pages/checkout_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controller/cart_controller.dart';
-import '../models/cart_model.dart';
 
-class CartPage extends StatefulWidget {
-  @override
-  State<CartPage> createState() => _CartPageState();
-}
-
-class _CartPageState extends State<CartPage> {
-  final CartController _cartController = Get.find<CartController>();
-
-  @override
-  void initState() {
-    
-    // TODO: implement initState
-    super.initState();
-    
-  }
+class CartPage extends StatelessWidget {
+  final CartController cartController = Get.find<CartController>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('My Cart'),
+        title: Text(
+          "Your Cart",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
-        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: IconThemeData(color: Colors.black),
       ),
       body: Obx(() {
-        // Menampilkan loading indicator jika sedang memuat
-        if (_cartController.isLoading) {
+        if (cartController.isLoading.value) {
           return Center(child: CircularProgressIndicator());
         }
 
-        // Menampilkan pesan jika keranjang kosong
-        if (_cartController.cartItems.isEmpty) {
+        if (cartController.cartItems.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.shopping_cart_outlined,
-                  size: 100,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Your cart is empty',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => Get.toNamed('/home'),
-                  child: Text('Start Shopping'),
-                ),
-              ],
+            child: Text(
+              "Your cart is empty",
+              style: TextStyle(fontSize: 18, color: Colors.black54),
             ),
           );
         }
 
-        // Daftar item di keranjang
         return Column(
           children: [
             Expanded(
               child: ListView.builder(
-                padding: EdgeInsets.all(16),
-                itemCount: _cartController.cartItems.length,
+                itemCount: cartController.cartItems.length,
                 itemBuilder: (context, index) {
-                  final cartItem = _cartController.cartItems[index];
-                  return _buildCartItemCard(cartItem);
-                },
-              ),
-            ),
-            
-            // Total dan Checkout
-            _buildCheckoutSection(),
-          ],
-        );
-      }),
-    );
-  }
+                  final cartItem = cartController.cartItems[index];
 
-  Widget _buildCartItemCard(CartModel cartItem) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 16),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            // Gambar Produk
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                image: DecorationImage(
-                  image: NetworkImage(cartItem.product.image),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            SizedBox(width: 16),
-            
-            // Detail Produk
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    cartItem.product.name,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    cartItem.product.rupiah,
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  
-                  // Kontrol Kuantitas
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Tombol Kurangi Kuantitas
-                      IconButton(
-                        icon: Icon(Icons.remove_circle_outline),
-                        onPressed: () {
-                          if (cartItem.quantity > 1) {
-                            _cartController.updateCartItemQuantity(
-                              cartItem, 
-                              cartItem.quantity - 1
-                            );
-                          } else {
-                            _cartController.removeFromCart(cartItem);
-                          }
-                        },
-                      ),
-                      
-                      // Jumlah
-                      Text(
-                        '${cartItem.quantity}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      
-                      // Tombol Tambah Kuantitas
-                      IconButton(
-                        icon: Icon(Icons.add_circle_outline),
-                        onPressed: () {
-                          _cartController.updateCartItemQuantity(
-                            cartItem, 
-                            cartItem.quantity + 1
+                  return Card(
+                    margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: ListTile(
+                      leading: Image.network(
+                        cartItem.product.image,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.image_not_supported,
+                            color: Colors.grey,
                           );
                         },
                       ),
-                      
-                      // Tombol Hapus
-                      IconButton(
-                        icon: Icon(Icons.delete_outline, color: Colors.red),
-                        onPressed: () {
-                          _cartController.removeFromCart(cartItem);
-                        },
+                      title: Text(cartItem.product.name),
+                      subtitle: Text(
+                        "Rp ${cartItem.product.price} x ${cartItem.quantity}",
                       ),
-                    ],
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.remove, color: Colors.red),
+                            onPressed:
+                                () => cartController.decreaseQuantity(cartItem),
+                          ),
+                          Text(
+                            "${cartItem.quantity}",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.add, color: Colors.green),
+                            onPressed:
+                                () => cartController.increaseQuantity(cartItem),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed:
+                                () => cartController.removeFromCart(cartItem),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Bagian Total Harga + Tombol Checkout
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.grey.shade300)),
+              ),
+              child: Column(
+                children: [
+                  Obx(
+                    () => Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Total:",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "Rp ${cartController.totalPrice.value.toStringAsFixed(0)}",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed:
+                          cartController.cartItems.isEmpty
+                              ? null
+                              : () {
+                                Get.to(() => CheckoutPage());
+                              },
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        "Checkout",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCheckoutSection() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: Offset(0, -3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Total',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Obx(() => Text(
-                    'Rp ${_cartController.totalPrice.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )),
-            ],
-          ),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              // Implementasi checkout
-              ScaffoldMessenger.of(Get.context!).showSnackBar(
-                SnackBar(
-                  content: Text('Checkout process coming soon'),
-                  backgroundColor: Colors.blue,
-                ),
-              );
-            },
-            child: Text(
-              'Checkout',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 50),
-            ),
-          ),
-        ],
-      ),
+        );
+      }),
     );
   }
 }

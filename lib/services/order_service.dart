@@ -1,64 +1,51 @@
 import 'package:dio/dio.dart';
-import 'package:get/get.dart';
-import '../models/order_model.dart';
-import '../models/cart_model.dart';
+import 'package:ecommerce_task6/models/order_model.dart';
+import 'package:ecommerce_task6/services/storage_service.dart';
 
-class OrderService extends GetxService {
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://tokopaedi.arfani.my.id/api/',
-    connectTimeout: Duration(seconds: 10),
-    receiveTimeout: Duration(seconds: 10),
-  ));
+class OrderService {
+  static const String baseUrl = "https://tokopaedi.arfani.my.id/api";
+  static final Dio _dio = Dio();
 
-  Future<Order?> createOrder(int userId, List<CartModel> cartItems) async {
+  // Membuat order baru
+  static Future<Order?> createOrder(List<Map<String, dynamic>> orderItems) async {
+    String? token = await StorageService.getToken();
+    if (token == null) throw Exception("Token tidak tersedia");
+
     try {
-      final orderItems = cartItems.map((cartItem) => {
-        'product_id': cartItem.productId,
-        'quantity': cartItem.quantity,
-        'price': cartItem.product.price,
-      }).toList();
+      final response = await _dio.post(
+        "$baseUrl/orders",
+        data: {"order_items": orderItems},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
 
-      final response = await _dio.post('orders', data: {
-        'user_id': userId,
-        'order_items': orderItems,
-      });
-
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return Order.fromJson(response.data['data']);
+      } else {
+        throw Exception("Gagal membuat pesanan: ${response.data['message']}");
       }
-      return null;
     } catch (e) {
-      print('Create order error: $e');
-      return null;
+      throw Exception("Error saat membuat order: $e");
     }
   }
 
-  Future<List<Order>> fetchUserOrders(int userId) async {
-    try {
-      final response = await _dio.get('orders/user/$userId');
+  // Mendapatkan detail order berdasarkan ID
+  static Future<Order?> fetchOrderDetails(int orderId) async {
+    String? token = await StorageService.getToken();
+    if (token == null) throw Exception("Token tidak tersedia");
 
-      if (response.statusCode == 200) {
-        final List<dynamic> orderList = response.data['data'];
-        return orderList.map((json) => Order.fromJson(json)).toList();
-      }
-      return [];
-    } catch (e) {
-      print('Fetch user orders error: $e');
-      return [];
-    }
-  }
-
-  Future<Order?> getOrderDetails(int orderId) async {
     try {
-      final response = await _dio.get('orders/$orderId');
+      final response = await _dio.get(
+        "$baseUrl/orders/$orderId",
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
 
       if (response.statusCode == 200) {
         return Order.fromJson(response.data['data']);
+      } else {
+        throw Exception("Gagal mengambil detail order");
       }
-      return null;
     } catch (e) {
-      print('Get order details error: $e');
-      return null;
+      throw Exception("Error saat mengambil order: $e");
     }
   }
 }

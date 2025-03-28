@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/cart_model.dart';
 import '../models/product_model.dart';
@@ -8,14 +9,9 @@ class CartController extends GetxController {
   final CartService _cartService = Get.put(CartService());
   final AuthController _authController = Get.find<AuthController>();
 
-  final RxList<CartModel> _cartItems = <CartModel>[].obs;
-  List<CartModel> get cartItems => _cartItems;
-
-  final RxBool _isLoading = false.obs;
-  bool get isLoading => _isLoading.value;
-
-  final RxDouble _totalPrice = 0.0.obs;
-  double get totalPrice => _totalPrice.value;
+  var cartItems = <CartModel>[].obs;
+  var isLoading = false.obs;
+  var totalPrice = 0.0.obs;
 
   @override
   void onInit() {
@@ -23,74 +19,110 @@ class CartController extends GetxController {
     fetchCartItems();
   }
 
+  // Fetch cart items from API
   Future<void> fetchCartItems() async {
     if (_authController.user == null) return;
 
-    _isLoading.value = true;
+    isLoading(true);
     try {
-      final cartItems = await _cartService.fetchCartItems(_authController.user!.id);
-      _cartItems.value = cartItems;
+      final cartData = await CartService.fetchCartItems(
+        _authController.user!.id,
+      );
+      cartItems.value = cartData;
       _calculateTotalPrice();
     } catch (e) {
-      print('Error fetching cart items: $e');
+      Get.snackbar("Error", "Failed to fetch cart items: $e");
     } finally {
-      _isLoading.value = false;
+      isLoading(false);
     }
   }
 
+  // Add product to cart
   Future<void> addToCart(ProductModel product, {int quantity = 1}) async {
-    if (_authController.user == null) return;
-
-    _isLoading.value = true;
-    try {
-      final cartItem = await _cartService.addToCart(_authController.user!.id, product, quantity);
-      if (cartItem != null) {
-        _cartItems.add(cartItem);
-        _calculateTotalPrice();
-      }
-    } catch (e) {
-      print('Error adding to cart: $e');
-    } finally {
-      _isLoading.value = false;
+    if (_authController.user == null) {
+      Get.snackbar('Error', 'Please login to add items to cart');
+      return;
     }
-  }
 
-  Future<void> removeFromCart(CartModel cartItem) async {
-    _isLoading.value = true;
+    isLoading(true);
     try {
-      final success = await _cartService.removeFromCart(cartItem.id);
+      bool success = await CartService.addToCart(product, quantity);
       if (success) {
-        _cartItems.remove(cartItem);
-        _calculateTotalPrice();
+        // Karena API tidak mengembalikan detail cart, kita perlu men-trigger fetch ulang
+        await fetchCartItems();
+        Get.snackbar("Success", "${product.name} added to cart");
+      } else {
+        Get.snackbar("Error", "Failed to add product to cart");
       }
     } catch (e) {
-      print('Error removing from cart: $e');
+      Get.snackbar("Error", "Failed to add product: $e");
     } finally {
-      _isLoading.value = false;
+      isLoading(false);
     }
   }
 
-  Future<void> updateCartItemQuantity(CartModel cartItem, int newQuantity) async {
-    _isLoading.value = true;
+  // Remove product from cart
+  Future<void> removeFromCart(CartModel cartItem) async {
+    isLoading(true);
     try {
-      final updatedCartItem = await _cartService.updateCartItemQuantity(cartItem.id, newQuantity);
-      if (updatedCartItem != null) {
-        final index = _cartItems.indexWhere((item) => item.id == cartItem.id);
-        if (index != -1) {
-          _cartItems[index] = updatedCartItem;
-          _calculateTotalPrice();
-        }
+      bool success = await CartService.removeFromCart(cartItem.id);
+      if (success) {
+        cartItems.remove(cartItem);
+        _calculateTotalPrice();
+        Get.snackbar("Success", "Item removed from cart");
       }
     } catch (e) {
-      print('Error updating cart item quantity: $e');
+      Get.snackbar("Error", "Failed to remove item: $e");
     } finally {
-      _isLoading.value = false;
+      isLoading(false);
     }
   }
 
+  void increaseQuantity(CartModel cartItem) {
+    int index = cartItems.indexWhere((item) => item.id == cartItem.id);
+
+    if (index != -1) {
+      cartItems[index] = CartModel(
+        id: cartItem.id,
+        product: cartItem.product,
+        productId: cartItem.productId,
+        userId: cartItem.userId,
+        quantity: cartItem.quantity + 1, // Tambah quantity
+        createdAt: cartItem.createdAt,
+        updatedAt: DateTime.now(), // Update waktu terakhir diperbarui
+      );
+
+      cartItems.refresh(); // Refresh GetX untuk update UI
+      _calculateTotalPrice();
+    }
+  }
+
+  void decreaseQuantity(CartModel cartItem) {
+    int index = cartItems.indexWhere((item) => item.id == cartItem.id);
+
+    if (index != -1) {
+      if (cartItem.quantity > 1) {
+        cartItems[index] = CartModel(
+          id: cartItem.id,
+          product: cartItem.product,
+          productId: cartItem.productId,
+          userId: cartItem.userId,
+          quantity: cartItem.quantity - 1, // Kurangi quantity
+          createdAt: cartItem.createdAt,
+          updatedAt: DateTime.now(),
+        );
+
+        cartItems.refresh();
+        _calculateTotalPrice();
+      } else {
+        removeFromCart(cartItem);
+      }
+    }
+  }
   void _calculateTotalPrice() {
-    _totalPrice.value = _cartItems.fold(0.0, (total, cartItem) {
-      return total + (cartItem.product.price * cartItem.quantity);
-    });
+    totalPrice.value = cartItems.fold(
+      0.0,
+      (sum, item) => sum + (item.product.price * item.quantity),
+    );
   }
 }

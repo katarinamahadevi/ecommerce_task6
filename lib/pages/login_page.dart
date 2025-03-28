@@ -27,10 +27,10 @@ class _LoginPageState extends State<LoginPage> {
     } else {
       // Show error message from the controller
       Get.snackbar(
-        'Login Failed', 
-        _authController.errorMessage.isNotEmpty 
-          ? _authController.errorMessage 
-          : 'Unable to login',
+        'Login Failed',
+        _authController.errorMessage.isNotEmpty
+            ? _authController.errorMessage
+            : 'Unable to login',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -41,7 +41,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: Text('Login'), backgroundColor: Colors.white),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -65,12 +66,11 @@ class _LoginPageState extends State<LoginPage> {
               obscureText: true,
             ),
             SizedBox(height: 20),
-            Obx(() => _authController.isLoading 
-              ? CircularProgressIndicator() 
-              : ElevatedButton(
-                  onPressed: _login,
-                  child: Text('Login'),
-                )
+            Obx(
+              () =>
+                  _authController.isLoading
+                      ? CircularProgressIndicator()
+                      : ElevatedButton(onPressed: _login, child: Text('Login')),
             ),
             SizedBox(height: 10),
             TextButton(
