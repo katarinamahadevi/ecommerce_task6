@@ -34,12 +34,16 @@ class Order {
       userId: json['user_id'],
       totalPrice: json['total_price'],
       status: json['status'],
-      midtransPaymentType: json['midtrans_payment_type'],
-      midtransPaymentUrl: json['midtrans_payment_url'],
-      midtransSnapToken: json['midtrans_snap_token'],
+      midtransPaymentType: json['midtrans_payment_type'] ?? '',
+      midtransPaymentUrl: json['midtrans_payment_url'] ?? '',
+      midtransSnapToken: json['midtrans_snap_token'] ?? '',
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
-      orderItems: (json['order_items'] as List).map((item) => OrderItem.fromJson(item)).toList(),
+      orderItems:
+          (json['order_items'] as List?)
+              ?.map((item) => OrderItem.fromJson(item))
+              .toList() ??
+          [],
     );
   }
 }

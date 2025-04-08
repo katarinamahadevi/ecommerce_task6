@@ -1,10 +1,12 @@
-import 'package:ecommerce_task6/controller/cart_controller.dart';
-import 'package:ecommerce_task6/pages/checkout_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controller/cart_controller.dart';
+import '../controller/order_controller.dart';
+import '../services/order_service.dart';
 
 class CartPage extends StatelessWidget {
   final CartController cartController = Get.find<CartController>();
+  final OrderController orderController = Get.put(OrderController());
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +69,10 @@ class CartPage extends StatelessWidget {
                           IconButton(
                             icon: Icon(Icons.remove, color: Colors.red),
                             onPressed:
-                                () => cartController.decreaseQuantity(cartItem),
+                                () => cartController.updateCartQuantity(
+                                  cartItem,
+                                  cartItem.quantity - 1,
+                                ),
                           ),
                           Text(
                             "${cartItem.quantity}",
@@ -79,7 +84,10 @@ class CartPage extends StatelessWidget {
                           IconButton(
                             icon: Icon(Icons.add, color: Colors.green),
                             onPressed:
-                                () => cartController.increaseQuantity(cartItem),
+                                () => cartController.updateCartQuantity(
+                                  cartItem,
+                                  cartItem.quantity + 1,
+                                ),
                           ),
                           IconButton(
                             icon: Icon(Icons.delete, color: Colors.red),
@@ -93,7 +101,7 @@ class CartPage extends StatelessWidget {
                 },
               ),
             ),
-            // Bagian Total Harga + Tombol Checkout
+            // Total Price and Checkout Section
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -125,25 +133,46 @@ class CartPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed:
-                          cartController.cartItems.isEmpty
-                              ? null
-                              : () {
-                                Get.to(() => CheckoutPage());
-                              },
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  Obx(
+                    () => SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed:
+                            orderController.isLoading.value
+                                ? null
+                                : () async {
+                                  // Validate cart is not empty
+                                  if (cartController.cartItems.isEmpty) {
+                                    Get.snackbar(
+                                      'Error',
+                                      'Your cart is empty',
+                                      backgroundColor: Colors.red,
+                                      colorText: Colors.white,
+                                    );
+                                    return;
+                                  }
+
+                                  // Call create order method
+                                  await orderController.createOrder();
+                                },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: Colors.black,
+                          disabledBackgroundColor: Colors.grey,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        "Checkout",
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                        child:
+                            orderController.isLoading.value
+                                ? CircularProgressIndicator(color: Colors.white)
+                                : Text(
+                                  "Checkout",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
                       ),
                     ),
                   ),

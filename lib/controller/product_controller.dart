@@ -21,10 +21,13 @@ class ProductController extends GetxController {
   final Rx<CategoryModel?> _selectedCategory = Rx<CategoryModel?>(null);
   CategoryModel? get selectedCategory => _selectedCategory.value;
 
+  // final RxDouble _minPrice = 0.0.obs;
+  // final RxDouble _maxPrice = 1000000.0.obs;
+
   @override
   void onInit() {
     super.onInit();
-    // fetchCategories();
+    fetchCategories();
     fetchProducts();
   }
 
@@ -43,25 +46,25 @@ class ProductController extends GetxController {
     }
   }
 
-  // Future<void> fetchCategories() async {
-  //   _isLoading.value = true;
-  //   try {
-  //     final fetchedCategories = await _productService.fetchCategories();
-  //     _categories.value = fetchedCategories;
-  //   } catch (e) {
-  //     print('Error fetching categories: $e');
-  //   } finally {
-  //     _isLoading.value = false;
-  //   }
-  // }
+  Future<void> fetchCategories() async {
+    // _isLoading.value = true;
+    try {
+      final fetchedCategories = await _productService.fetchCategories();
+      _categories.value = fetchedCategories;
+    } catch (e) {
+      print('Error fetching categories: $e');
+    } finally {
+      _isLoading.value = false;
+    }
+  }
 
   void setSearchQuery(String query) {
     _searchQuery.value = query;
     fetchProducts(search: query);
   }
 
-  // void setSelectedCategory(CategoryModel? category) {
-  //   _selectedCategory.value = category;
-  //   fetchProducts(categoryId: category?.id);
-  // }
+  void setSelectedCategory(CategoryModel? category) {
+    _selectedCategory.value = category;
+    fetchProducts(categoryId: category?.id);
+  }
 }

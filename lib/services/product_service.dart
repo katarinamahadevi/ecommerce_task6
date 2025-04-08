@@ -19,7 +19,7 @@ class ProductService extends GetxService {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (search != null) queryParams['search'] = search;
+      if (search != null) queryParams['name'] = search;
       if (categoryId != null) queryParams['category_id'] = categoryId;
 
       final response = await _dio.get('products', queryParameters: queryParams);
@@ -39,12 +39,29 @@ class ProductService extends GetxService {
     try {
       final response = await _dio.get('categories');
 
-      if (response.statusCode == 200) {
+      print('Raw Response: ${response.data}');
+      print('Response Type: ${response.data.runtimeType}');
+
+      // Check if the response is a List directly
+      if (response.data is List) {
+        final List<dynamic> categoryList = response.data;
+
+        print('Raw Category List: $categoryList');
+
+        return categoryList
+            .map((json) => CategoryModel.fromJson(json))
+            .toList();
+      } else if (response.data is Map && response.data['data'] is List) {
         final List<dynamic> categoryList = response.data['data'];
+
+        print('Raw Category List: $categoryList');
+
         return categoryList
             .map((json) => CategoryModel.fromJson(json))
             .toList();
       }
+
+      print('Unexpected response format');
       return [];
     } catch (e) {
       print('Fetch categories error: $e');

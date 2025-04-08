@@ -19,7 +19,6 @@ class CartController extends GetxController {
     fetchCartItems();
   }
 
-  // Fetch cart items from API
   Future<void> fetchCartItems() async {
     if (_authController.user == null) return;
 
@@ -37,7 +36,6 @@ class CartController extends GetxController {
     }
   }
 
-  // Add product to cart
   Future<void> addToCart(ProductModel product, {int quantity = 1}) async {
     if (_authController.user == null) {
       Get.snackbar('Error', 'Please login to add items to cart');
@@ -48,7 +46,6 @@ class CartController extends GetxController {
     try {
       bool success = await CartService.addToCart(product, quantity);
       if (success) {
-        // Karena API tidak mengembalikan detail cart, kita perlu men-trigger fetch ulang
         await fetchCartItems();
         Get.snackbar("Success", "${product.name} added to cart");
       } else {
@@ -61,7 +58,6 @@ class CartController extends GetxController {
     }
   }
 
-  // Remove product from cart
   Future<void> removeFromCart(CartModel cartItem) async {
     isLoading(true);
     try {
@@ -87,12 +83,12 @@ class CartController extends GetxController {
         product: cartItem.product,
         productId: cartItem.productId,
         userId: cartItem.userId,
-        quantity: cartItem.quantity + 1, // Tambah quantity
+        quantity: cartItem.quantity + 1, 
         createdAt: cartItem.createdAt,
-        updatedAt: DateTime.now(), // Update waktu terakhir diperbarui
+        updatedAt: DateTime.now(), 
       );
 
-      cartItems.refresh(); // Refresh GetX untuk update UI
+      cartItems.refresh(); 
       _calculateTotalPrice();
     }
   }
@@ -107,7 +103,7 @@ class CartController extends GetxController {
           product: cartItem.product,
           productId: cartItem.productId,
           userId: cartItem.userId,
-          quantity: cartItem.quantity - 1, // Kurangi quantity
+          quantity: cartItem.quantity - 1, 
           createdAt: cartItem.createdAt,
           updatedAt: DateTime.now(),
         );
@@ -119,10 +115,33 @@ class CartController extends GetxController {
       }
     }
   }
+
   void _calculateTotalPrice() {
     totalPrice.value = cartItems.fold(
       0.0,
       (sum, item) => sum + (item.product.price * item.quantity),
     );
   }
+  Future<void> updateCartQuantity(CartModel cartItem, int newQuantity) async {
+  if (newQuantity < 1) {
+    await removeFromCart(cartItem);
+    return;
+  }
+
+  isLoading(true);
+  try {
+    // Hapus item lama
+    await CartService.removeFromCart(cartItem.id);
+
+    // Tambah ulang item dengan quantity baru
+    await CartService.addToCart(cartItem.product, newQuantity);
+
+    // Refresh cart
+    await fetchCartItems();
+  } catch (e) {
+    Get.snackbar("Error", "Failed to update quantity: $e");
+  } finally {
+    isLoading(false);
+  }
+}
 }

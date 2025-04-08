@@ -1,7 +1,9 @@
 import 'package:ecommerce_task6/pages/cart_page.dart';
+import 'package:ecommerce_task6/pages/checkout_page.dart';
 import 'package:ecommerce_task6/pages/home_page.dart';
 import 'package:ecommerce_task6/pages/login_page.dart';
 import 'package:ecommerce_task6/pages/onboarding_page.dart';
+import 'package:ecommerce_task6/pages/order_detail_page.dart';
 import 'package:ecommerce_task6/pages/orders_page.dart';
 import 'package:ecommerce_task6/pages/profile_page.dart';
 import 'package:ecommerce_task6/pages/register_page.dart';
@@ -31,9 +33,17 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/register', page: () => RegisterPage()),
         GetPage(name: '/home', page: () => HomePage()),
         GetPage(name: '/cart', page: () => CartPage()),
-        // GetPage(name: '/orders', page: () => OrdersPage()),
+        GetPage(name: '/orders', page: () => OrdersPage()),
         GetPage(name: '/profile', page: () => ProfilePage()),
-        // GetPage(name: '/checkout', page: () => OrdersPage()),
+        GetPage(
+          name: '/checkout',
+          page: () => CheckoutPage(paymentUrl: Get.arguments),
+        ),
+//         GetPage(
+//   name: '/order-detail',
+//   page: () => OrderDetailPage(),
+// ),
+
       ],
     );
   }
