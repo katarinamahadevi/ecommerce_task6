@@ -15,24 +15,45 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ProductController _productController = Get.find<ProductController>();
   final CartController _cartController = Get.find<CartController>();
+  final ScrollController _scrollController = ScrollController();
 
   CategoryModel? _selectedCategory;
-
-  // Price controllers
-  // final TextEditingController _minPriceController = TextEditingController();
-  // final TextEditingController _maxPriceController = TextEditingController();
+  double _minPrice = 0;
+  double _maxPrice = 0;
+  final TextEditingController _minPriceController = TextEditingController();
+  final TextEditingController _maxPriceController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _productController.fetchCategories();
+    _setupScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _minPriceController.dispose();
+    _maxPriceController.dispose();
+    super.dispose();
+  }
+
+  void _setupScrollController() {
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 300) {
+        // Load more data when user scrolls to near the end
+        _productController.loadMore();
+      }
+    });
   }
 
   void _showFilterBottomSheet(BuildContext context) {
-    // Reset controllers
-    // _minPriceController.clear();
-    // _maxPriceController.clear();
-    _selectedCategory = null;
+    // _selectedCategory = _productController.selectedCategory;
+    _minPriceController.text =
+        _minPrice > 0 ? _minPrice.toStringAsFixed(0) : '';
+    _maxPriceController.text =
+        _maxPrice > 0 ? _maxPrice.toStringAsFixed(0) : '';
 
     showModalBottomSheet(
       backgroundColor: Colors.white,
@@ -134,7 +155,7 @@ class _HomePageState extends State<HomePage> {
                         // Minimum Price
                         Expanded(
                           child: TextField(
-                            // controller: _minPriceController,
+                            controller: _minPriceController,
                             decoration: InputDecoration(
                               hintText: 'Min Price',
                               prefixText: 'Rp ',
@@ -161,7 +182,7 @@ class _HomePageState extends State<HomePage> {
                         // Maximum Price
                         Expanded(
                           child: TextField(
-                            // controller: _maxPriceController,
+                            controller: _maxPriceController,
                             decoration: InputDecoration(
                               hintText: 'Max Price',
                               prefixText: 'Rp ',
@@ -188,13 +209,20 @@ class _HomePageState extends State<HomePage> {
                     Spacer(),
                     Row(
                       children: [
-                        SizedBox(width: 10),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              _productController.fetchProducts(
-                                categoryId: _selectedCategory?.id,
-                
+                              _minPrice =
+                                  _minPriceController.text.isEmpty
+                                      ? 0
+                                      : double.parse(_minPriceController.text);
+                              _maxPrice =
+                                  _maxPriceController.text.isEmpty
+                                      ? 0
+                                      : double.parse(_maxPriceController.text);
+
+                              _productController.setSelectedCategory(
+                                _selectedCategory,
                               );
                               Navigator.pop(context);
                             },
@@ -281,7 +309,7 @@ class _HomePageState extends State<HomePage> {
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: 'Search products...',
+                      hintText: 'Cari produk...',
                       prefixIcon: Icon(Icons.search, color: Colors.black),
                       filled: true,
                       fillColor: Colors.white,
@@ -313,14 +341,15 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Product List
           Expanded(
             child: Obx(() {
-              if (_productController.isLoading) {
+              if (_productController.isLoading &&
+                  _productController.products.isEmpty) {
                 return Center(
                   child: CircularProgressIndicator(color: Colors.black),
                 );
               }
+
               if (_productController.products.isEmpty) {
                 return Center(
                   child: Text(
@@ -329,33 +358,57 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
               }
-              return GridView.builder(
-                padding: EdgeInsets.all(8),
-                itemCount: _productController.products.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 0.7,
-                ),
-                itemBuilder: (context, index) {
-                  final product = _productController.products[index];
-                  return ProductCard(
-                    product: product,
-                    onAddToCart: () {
-                      _cartController.addToCart(product);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${product.name} added to cart'),
-                          duration: Duration(seconds: 1),
-                        ),
+
+              return CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  // Products Grid
+                  SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 0.7,
+                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final product = _productController.products[index];
+                      return ProductCard(
+                        product: product,
+                        onAddToCart: () {
+                          _cartController.addToCart(product);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${product.name} added to cart'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        onTap: () {
+                          // Get.toNamed('/product-detail', arguments: product);
+                        },
                       );
-                    },
-                    onTap:
-                        () =>
-                            Get.toNamed('/product-detail', arguments: product),
-                  );
-                },
+                    }, childCount: _productController.products.length),
+                  ),
+
+                  SliverToBoxAdapter(
+                    child: Obx(() {
+                      if (_productController.isFetchingMore) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          alignment: Alignment.center,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.black,
+                            ),
+                            strokeWidth: 3,
+                          ),
+                        );
+                      } else {
+                        return SizedBox(height: 20);
+                      }
+                    }),
+                  ),
+                ],
               );
             }),
           ),
@@ -388,9 +441,17 @@ class ProductCard extends StatelessWidget {
         return GestureDetector(
           onTap: onTap,
           child: Container(
+            margin: EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

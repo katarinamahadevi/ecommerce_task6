@@ -45,6 +45,7 @@ class CartPage extends StatelessWidget {
                   final cartItem = cartController.cartItems[index];
 
                   return Card(
+                    color: Colors.white,
                     margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     child: ListTile(
                       leading: Image.network(
@@ -124,9 +125,9 @@ class CartPage extends StatelessWidget {
                         Text(
                           "Rp ${cartController.totalPrice.value.toStringAsFixed(0)}",
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: Colors.black,
                           ),
                         ),
                       ],
@@ -141,7 +142,6 @@ class CartPage extends StatelessWidget {
                             orderController.isLoading.value
                                 ? null
                                 : () async {
-                                  // Validate cart is not empty
                                   if (cartController.cartItems.isEmpty) {
                                     Get.snackbar(
                                       'Error',

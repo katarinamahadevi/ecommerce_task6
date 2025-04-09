@@ -10,7 +10,7 @@ class ProductModel {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String rupiah;
-  final CategoryModel category;
+  final CategoryModel? category;
 
   ProductModel({
     required this.id,
@@ -35,19 +35,9 @@ class ProductModel {
     createdAt: DateTime.parse(json["created_at"]),
     updatedAt: DateTime.parse(json["updated_at"]),
     rupiah: json["rupiah"],
-    category: CategoryModel.fromJson(json["category"]),
+    category:
+        json["category"] != null
+            ? CategoryModel.fromJson(json["category"])
+            : null,
   );
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "image": image,
-    "name": name,
-    "price": price,
-    "description": description,
-    "category_id": categoryId,
-    "created_at": createdAt.toIso8601String(),
-    "updated_at": updatedAt.toIso8601String(),
-    "rupiah": rupiah,
-    "category": category.toJson(),
-  };
 }

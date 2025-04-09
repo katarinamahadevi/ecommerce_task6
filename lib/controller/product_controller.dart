@@ -1,7 +1,8 @@
+import 'package:ecommerce_task6/models/category_model.dart';
+import 'package:ecommerce_task6/models/product_model.dart';
+import 'package:ecommerce_task6/services/product_service.dart';
 import 'package:get/get.dart';
-import '../models/product_model.dart';
-import '../models/category_model.dart';
-import '../services/product_service.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 
 class ProductController extends GetxController {
   final ProductService _productService = Get.put(ProductService());
@@ -15,56 +16,83 @@ class ProductController extends GetxController {
   final RxBool _isLoading = false.obs;
   bool get isLoading => _isLoading.value;
 
+  final RxBool _isFetchingMore = false.obs;
+  bool get isFetchingMore => _isFetchingMore.value;
+
+  int _currentPage = 1;
+  bool _hasMore = true;
+
   final RxString _searchQuery = ''.obs;
-  String get searchQuery => _searchQuery.value;
-
   final Rx<CategoryModel?> _selectedCategory = Rx<CategoryModel?>(null);
-  CategoryModel? get selectedCategory => _selectedCategory.value;
-
-  // final RxDouble _minPrice = 0.0.obs;
-  // final RxDouble _maxPrice = 1000000.0.obs;
 
   @override
   void onInit() {
     super.onInit();
     fetchCategories();
-    fetchProducts();
+    fetchProducts(reset: true);
   }
 
-  Future<void> fetchProducts({String? search, int? categoryId}) async {
-    _isLoading.value = true;
+  Future<void> fetchProducts({bool reset = false}) async {
+    if (_isLoading.value || _isFetchingMore.value) return;
+
+    if (reset) {
+      _currentPage = 1;
+      _hasMore = true;
+      _products.clear();
+    }
+
+    if (!_hasMore) return;
+
+    if (_currentPage == 1) {
+      _isLoading.value = true;
+    } else {
+      _isFetchingMore.value = true;
+    }
+
     try {
       final fetchedProducts = await _productService.fetchProducts(
-        search: search,
-        categoryId: categoryId,
+        search: _searchQuery.value,
+        categoryId: _selectedCategory.value?.id,
+        page: _currentPage,
+        limit: 10,
       );
-      _products.value = fetchedProducts;
+
+      if (fetchedProducts.isEmpty) {
+        _hasMore = false;
+      } else {
+        _products.addAll(fetchedProducts);
+        _currentPage++;
+      }
     } catch (e) {
       print('Error fetching products: $e');
     } finally {
       _isLoading.value = false;
+      _isFetchingMore.value = false;
     }
   }
 
   Future<void> fetchCategories() async {
-    // _isLoading.value = true;
     try {
       final fetchedCategories = await _productService.fetchCategories();
       _categories.value = fetchedCategories;
     } catch (e) {
       print('Error fetching categories: $e');
-    } finally {
-      _isLoading.value = false;
     }
   }
 
   void setSearchQuery(String query) {
     _searchQuery.value = query;
-    fetchProducts(search: query);
+    fetchProducts(reset: true);
   }
 
   void setSelectedCategory(CategoryModel? category) {
     _selectedCategory.value = category;
-    fetchProducts(categoryId: category?.id);
+    fetchProducts(reset: true);
+  }
+
+  void loadMore() {
+    if (_hasMore && !_isFetchingMore.value) {
+      fetchProducts();
+    }
   }
 }

@@ -1,10 +1,22 @@
 import 'package:dio/dio.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../services/storage_service.dart';
 import '../models/order_model.dart';
 
 class OrderService {
   static const String baseUrl = "https://tokopaedi.arfani.my.id/api";
-  static final Dio _dio = Dio();
+  static final Dio _dio =
+      Dio()
+        ..interceptors.add(
+          PrettyDioLogger(
+            requestHeader: true,
+            requestBody: true,
+            responseHeader: true,
+            responseBody: true,
+            compact: true,
+            maxWidth: 90,
+          ),
+        );
 
   static Future<Order> createOrder(
     int totalPrice,
@@ -67,39 +79,46 @@ class OrderService {
     return [];
   }
 
-  // static Future<Order> fetchDetailOrder(int id) async {
-  //   String? token = await StorageService.getToken();
+  static Future<Order> fetchOrderDetail(int id) async {
+    String? token = await StorageService.getToken();
 
-  //   if (token == null) throw Exception("Authentication token is not available");
+    if (token == null) {
+      throw Exception("Authentication token is not available");
+    }
 
-  //   try {
-  //     final response = await _dio.get(
-  //       '$baseUrl/orders/$id',
-  //       options: Options(
-  //         headers: {
-  //           'Authorization': 'Bearer $token',
-  //           'Accept': 'application/json',
-  //         },
-  //       ),
-  //     );
+    try {
+      final response = await _dio.get(
+        '$baseUrl/orders/$id',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
 
-  //     // Cek struktur data JSON dan parsing sesuai
-  //     final data =
-  //         response
-  //             .data['data']; // disesuaikan dari kode kamu yang sebelumnya pakai data['data']['data']
-  //     if (data == null) {
-  //       throw Exception("Order data is null");
-  //     }
+      if (response.statusCode == 200) {
+        print("Response data: ${response.data}");
 
-  //     return Order.fromJson(data);
-  //   } on DioException catch (e) {
-  //     if (e.response != null) {
-  //       print("Dio error: ${e.response?.data}");
-  //       throw Exception('Failed to fetch order: ${e.response?.data}');
-  //     } else {
-  //       print("Network error: ${e.message}");
-  //       throw Exception('Network error occurred: ${e.message}');
-  //     }
-  //   }
-  // }
+        final data = response.data['data'];
+        if (data != null && data is Map<String, dynamic>) {
+          return Order.fromJson(data);
+        } else {
+          throw Exception('Order detail is null or invalid format.');
+        }
+      } else {
+        print("Full response data: ${response.data}");
+
+        throw Exception('Failed to fetch order detail');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        print("Dio error: ${e.response?.data}");
+        throw Exception('Failed to fetch order detail: ${e.response?.data}');
+      } else {
+        print("Network error: ${e.message}");
+        throw Exception('Network error occurred: ${e.message}');
+      }
+    }
+  }
 }

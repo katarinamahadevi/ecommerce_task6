@@ -1,3 +1,4 @@
+import 'package:ecommerce_task6/pages/order_detail_page.dart';
 import 'package:ecommerce_task6/widgets/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -33,7 +34,7 @@ class _OrdersPageState extends State<OrdersPage> {
         titleTextStyle: TextStyle(
           fontWeight: FontWeight.bold,
           color: Colors.black,
-          fontSize: 20,
+          fontSize: 22,
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -77,44 +78,51 @@ class OrderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.receipt_long, size: 30, color: Colors.black),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Order #${order.code}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+    return GestureDetector(
+      onTap: () {
+        print("Navigasi ke detail dengan ID: ${order.id}");
+        Get.toNamed('/order-detail', arguments: order.id);
+      },
+
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.receipt_long, size: 30, color: Colors.black),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Order #${order.code}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Total: ${formatCurrency(order.totalPrice)}',
-                  style: const TextStyle(color: Colors.black54),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Status: ${order.status}',
-                  style: const TextStyle(color: Colors.black54),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    'Total: ${formatCurrency(order.totalPrice)}',
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Status: ${order.status}',
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-        ],
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }

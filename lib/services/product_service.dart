@@ -16,9 +16,13 @@ class ProductService extends GetxService {
   Future<List<ProductModel>> fetchProducts({
     String? search,
     int? categoryId,
+    int page = 1,
+    int limit = 10,
   }) async {
     try {
-      final queryParams = <String, dynamic>{};
+      final queryParams = <String, dynamic>{'page' : page,
+      'limit' : limit,};
+      
       if (search != null) queryParams['name'] = search;
       if (categoryId != null) queryParams['category_id'] = categoryId;
 
@@ -42,7 +46,6 @@ class ProductService extends GetxService {
       print('Raw Response: ${response.data}');
       print('Response Type: ${response.data.runtimeType}');
 
-      // Check if the response is a List directly
       if (response.data is List) {
         final List<dynamic> categoryList = response.data;
 

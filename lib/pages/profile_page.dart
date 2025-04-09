@@ -14,7 +14,7 @@ class ProfilePage extends StatelessWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(
-          'Profile',
+          'Profil',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -82,8 +82,6 @@ class ProfilePage extends StatelessWidget {
                   style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
                 SizedBox(height: 30),
-
-
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

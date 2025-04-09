@@ -1,4 +1,4 @@
-import 'package:ecommerce_task6/models/product_model.dart';
+import 'product_model.dart';
 
 class OrderItem {
   final int id;
@@ -8,7 +8,7 @@ class OrderItem {
   final int price;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final ProductModel product;
+  final ProductModel? product;
 
   OrderItem({
     required this.id,
@@ -18,7 +18,7 @@ class OrderItem {
     required this.price,
     required this.createdAt,
     required this.updatedAt,
-    required this.product,
+    this.product,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -30,7 +30,8 @@ class OrderItem {
       price: json['price'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
-      product: ProductModel.fromJson(json['product']),
+      product: json['product'] != null ? ProductModel.fromJson(json['product']) : null,
+
     );
   }
 }

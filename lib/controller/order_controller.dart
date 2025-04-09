@@ -15,6 +15,9 @@ class OrderController extends GetxController {
   var orderList = <Order>[].obs;
   Rx<Order?> selectedOrder = Rx<Order?>(null);
 
+  var selectedOrderDetail = Rx<Order?>(null);
+  var isOrderDetailLoading = false.obs;
+
   Future<void> createOrder() async {
     if (_cartController.cartItems.isEmpty) {
       Get.snackbar('Error', 'Your cart is empty');
@@ -71,19 +74,21 @@ class OrderController extends GetxController {
     }
   }
 
-// Future<void> getOrderDetail(int id) async {
-//   try {
-//     isLoading(true);
-
-//     final order = await OrderService.fetchDetailOrder(id);
-//     selectedOrder.value = order;
-
-//     // Navigasi ke halaman detail order dengan membawa data order jika perlu
-//     Get.toNamed('/order-detail', arguments: order);
-//   } catch (e) {
-//     Get.snackbar('Error', 'Failed to load order detail: $e');
-//   } finally {
-//     isLoading(false);
-//   }
-// }
+  Future<void> fetchOrderDetail(int id) async {
+    // try {
+    print("Fetch detail for order ID: $id");
+    isOrderDetailLoading(true);
+    final order = await OrderService.fetchOrderDetail(id);
+    print("Order detail fetched: $order");
+    selectedOrderDetail.value = order;
+    // } catch (e) {
+    //   print("Error fetching order detail: $e");
+    //   // selectedOrderDetail.value = null;
+    //   Future.delayed(Duration.zero, () {
+    //     Get.snackbar('Error', 'Gagal mengambil detail pesanan');
+    //   });
+    // } finally {
+    //   isOrderDetailLoading(false);
+    // }
+  }
 }

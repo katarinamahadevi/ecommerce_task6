@@ -28,14 +28,4 @@ class CartModel {
         updatedAt: DateTime.parse(json["updated_at"]),
         product: ProductModel.fromJson(json["product"]),
     );
-
-    Map<String, dynamic> toJson() => {
-        "id": id,
-        "product_id": productId,
-        "user_id": userId,
-        "quantity": quantity,
-        "created_at": createdAt.toIso8601String(),
-        "updated_at": updatedAt.toIso8601String(),
-        "product": product.toJson(),
-    };
 }

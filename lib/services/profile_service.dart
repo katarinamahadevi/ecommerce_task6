@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:ecommerce_task6/services/storage_service.dart';
 import 'package:get/get.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../models/user_model.dart';
 
 class ProfileService extends GetxService {
@@ -11,7 +12,15 @@ class ProfileService extends GetxService {
       receiveTimeout: Duration(seconds: 10),
       headers: {'Accept': 'application/json'},
     ),
-  );
+  )
+  ..interceptors.add(PrettyDioLogger(
+      requestHeader: true,
+      requestBody: true,
+      responseHeader: true,
+      responseBody: true,
+      compact: true,
+      maxWidth: 90,
+    ));
 
   final StorageService _storageService = Get.put(
     StorageService(),

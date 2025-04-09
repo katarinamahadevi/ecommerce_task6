@@ -39,11 +39,10 @@ class MyApp extends StatelessWidget {
           name: '/checkout',
           page: () => CheckoutPage(paymentUrl: Get.arguments),
         ),
-//         GetPage(
-//   name: '/order-detail',
-//   page: () => OrderDetailPage(),
-// ),
-
+        GetPage(
+          name: '/order-detail',
+          page: () => OrderDetailPage(orderId: Get.arguments),
+        ),
       ],
     );
   }
