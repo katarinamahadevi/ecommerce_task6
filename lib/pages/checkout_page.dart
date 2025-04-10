@@ -61,7 +61,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             if (error.description.contains('net::ERR_NAME_NOT_RESOLVED') ||
                 error.description.contains('webpage not available') ||
                 error.description.contains('ERR_UNKNOWN_URL_SCHEME')) {
-              Get.back(); // Close WebView
+              Get.back(); 
               Future.delayed(Duration(milliseconds: 300), () {
                 _showPaymentSuccessDialog();
               });

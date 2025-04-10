@@ -1,3 +1,4 @@
+import 'package:ecommerce_task6/services/storage_service.dart';
 import 'package:get/get.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
@@ -59,6 +60,19 @@ class AuthController extends GetxController {
       _errorMessage.value = 'An unexpected error occurred';
       _isLoading.value = false;
       return false;
+    }
+  }
+
+  Future<void> logout() async {
+    _isLoading.value = true;
+    try {
+      await _authService.logout();
+      _user.value = null;
+      _authToken = null;
+    } catch (e) {
+      print("Logout error: $e");
+    } finally {
+      _isLoading.value = false;
     }
   }
 }

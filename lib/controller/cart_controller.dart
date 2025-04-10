@@ -83,12 +83,12 @@ class CartController extends GetxController {
         product: cartItem.product,
         productId: cartItem.productId,
         userId: cartItem.userId,
-        quantity: cartItem.quantity + 1, 
+        quantity: cartItem.quantity + 1,
         createdAt: cartItem.createdAt,
-        updatedAt: DateTime.now(), 
+        updatedAt: DateTime.now(),
       );
 
-      cartItems.refresh(); 
+      cartItems.refresh();
       _calculateTotalPrice();
     }
   }
@@ -103,7 +103,7 @@ class CartController extends GetxController {
           product: cartItem.product,
           productId: cartItem.productId,
           userId: cartItem.userId,
-          quantity: cartItem.quantity - 1, 
+          quantity: cartItem.quantity - 1,
           createdAt: cartItem.createdAt,
           updatedAt: DateTime.now(),
         );
@@ -122,26 +122,23 @@ class CartController extends GetxController {
       (sum, item) => sum + (item.product.price * item.quantity),
     );
   }
+
   Future<void> updateCartQuantity(CartModel cartItem, int newQuantity) async {
-  if (newQuantity < 1) {
-    await removeFromCart(cartItem);
-    return;
+    if (newQuantity < 1) {
+      await removeFromCart(cartItem);
+      return;
+    }
+
+    isLoading(true);
+    try {
+      await CartService.removeFromCart(cartItem.id);
+      await CartService.addToCart(cartItem.product, newQuantity);
+
+      await fetchCartItems();
+    } catch (e) {
+      Get.snackbar("Error", "Failed to update quantity: $e");
+    } finally {
+      isLoading(false);
+    }
   }
-
-  isLoading(true);
-  try {
-    // Hapus item lama
-    await CartService.removeFromCart(cartItem.id);
-
-    // Tambah ulang item dengan quantity baru
-    await CartService.addToCart(cartItem.product, newQuantity);
-
-    // Refresh cart
-    await fetchCartItems();
-  } catch (e) {
-    Get.snackbar("Error", "Failed to update quantity: $e");
-  } finally {
-    isLoading(false);
-  }
-}
 }

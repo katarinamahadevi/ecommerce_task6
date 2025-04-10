@@ -99,8 +99,7 @@ class AuthService extends GetxService {
       return {'success': false, 'message': 'An unexpected error occurred'};
     }
   }
+  Future<void> logout() async {
+  await StorageService.removeToken();
 }
-
-Future<void> logout() async {
-  // Implement logout logic if needed
 }

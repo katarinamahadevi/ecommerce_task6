@@ -1,3 +1,4 @@
+import 'package:ecommerce_task6/controller/auth_controller.dart';
 import 'package:ecommerce_task6/controller/profile_controller.dart';
 import 'package:ecommerce_task6/pages/edit_profile_page.dart';
 import 'package:ecommerce_task6/widgets/navbar.dart';
@@ -6,11 +7,14 @@ import 'package:get/get.dart';
 
 class ProfilePage extends StatelessWidget {
   final ProfileController _profileController = Get.put(ProfileController());
+  final AuthController _authController = Get.put(
+    AuthController(),
+  ); // <- tambahkan ini
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, 
+      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(
@@ -67,7 +71,6 @@ class ProfilePage extends StatelessWidget {
                 ),
                 SizedBox(height: 15),
 
-
                 Text(
                   user.name,
                   style: TextStyle(
@@ -101,6 +104,32 @@ class ProfilePage extends StatelessWidget {
                     child: Text(
                       'Edit Profile',
                       style: TextStyle(fontSize: 16, color: Colors.black),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 300),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await _authController.logout();
+                      Get.offAllNamed(
+                        '/onboarding',
+                      ); 
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade400,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 20,
+                      ),
+                    ),
+                    child: Text(
+                      'Logout',
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
                 ),

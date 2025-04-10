@@ -25,11 +25,30 @@ class ProductController extends GetxController {
   final RxString _searchQuery = ''.obs;
   final Rx<CategoryModel?> _selectedCategory = Rx<CategoryModel?>(null);
 
+  final Rx<int?> _minPrice = Rx<int?>(null);
+  final Rx<int?> _maxPrice = Rx<int?>(null);
+
+  int? get minPrice => _minPrice.value;
+  int? get maxPrice => _maxPrice.value;
+
   @override
   void onInit() {
     super.onInit();
     fetchCategories();
     fetchProducts(reset: true);
+  }
+
+  void setMinPrice(int? price) {
+    _minPrice.value = price;
+  }
+
+  void setMaxPrice(int? price) {
+    _maxPrice.value = price;
+  }
+
+  void resetPriceFilter() {
+    _minPrice.value = null;
+    _maxPrice.value = null;
   }
 
   Future<void> fetchProducts({bool reset = false}) async {
@@ -53,6 +72,8 @@ class ProductController extends GetxController {
       final fetchedProducts = await _productService.fetchProducts(
         search: _searchQuery.value,
         categoryId: _selectedCategory.value?.id,
+        minPrice: _minPrice.value,
+        maxPrice: _maxPrice.value,
         page: _currentPage,
         limit: 10,
       );
@@ -62,6 +83,10 @@ class ProductController extends GetxController {
       } else {
         _products.addAll(fetchedProducts);
         _currentPage++;
+
+        if (fetchedProducts.length < 10) {
+          _hasMore = false;
+        }
       }
     } catch (e) {
       print('Error fetching products: $e');

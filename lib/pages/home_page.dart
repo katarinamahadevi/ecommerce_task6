@@ -16,12 +16,7 @@ class _HomePageState extends State<HomePage> {
   final ProductController _productController = Get.find<ProductController>();
   final CartController _cartController = Get.find<CartController>();
   final ScrollController _scrollController = ScrollController();
-
   CategoryModel? _selectedCategory;
-  double _minPrice = 0;
-  double _maxPrice = 0;
-  final TextEditingController _minPriceController = TextEditingController();
-  final TextEditingController _maxPriceController = TextEditingController();
 
   @override
   void initState() {
@@ -33,8 +28,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _minPriceController.dispose();
-    _maxPriceController.dispose();
     super.dispose();
   }
 
@@ -49,11 +42,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showFilterBottomSheet(BuildContext context) {
+    final TextEditingController _minPriceController = TextEditingController(
+      text: _productController.minPrice?.toString() ?? '',
+    );
+    final TextEditingController _maxPriceController = TextEditingController(
+      text: _productController.maxPrice?.toString() ?? '',
+    );
+
+    // Initialize selected category from current state
     // _selectedCategory = _productController.selectedCategory;
-    _minPriceController.text =
-        _minPrice > 0 ? _minPrice.toStringAsFixed(0) : '';
-    _maxPriceController.text =
-        _maxPrice > 0 ? _maxPrice.toStringAsFixed(0) : '';
 
     showModalBottomSheet(
       backgroundColor: Colors.white,
@@ -90,6 +87,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Divider(color: Colors.grey[300]),
                     SizedBox(height: 10),
+
+                    // Categories Section
                     Text(
                       'Categories',
                       style: TextStyle(
@@ -99,6 +98,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(height: 10),
+
                     Obx(() {
                       final allCategories = [
                         null,
@@ -150,6 +150,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(height: 10),
+
                     Row(
                       children: [
                         // Minimum Price
@@ -176,9 +177,11 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                         ),
+
                         SizedBox(width: 10),
                         Text('-', style: TextStyle(fontSize: 18)),
                         SizedBox(width: 10),
+
                         // Maximum Price
                         Expanded(
                           child: TextField(
@@ -207,23 +210,43 @@ class _HomePageState extends State<HomePage> {
                     ),
 
                     Spacer(),
+
                     Row(
                       children: [
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              _minPrice =
-                                  _minPriceController.text.isEmpty
-                                      ? 0
-                                      : double.parse(_minPriceController.text);
-                              _maxPrice =
-                                  _maxPriceController.text.isEmpty
-                                      ? 0
-                                      : double.parse(_maxPriceController.text);
+                              // // Apply category filter
+                              // _productController.setSelectedCategory(
+                              //   _selectedCategory,
+                              // );
+                              int? minPrice;
+                              int? maxPrice;
 
+                              if (_minPriceController.text.isNotEmpty) {
+                                minPrice = int.tryParse(
+                                  _minPriceController.text,
+                                );
+                              }
+
+                              if (_maxPriceController.text.isNotEmpty) {
+                                maxPrice = int.tryParse(
+                                  _maxPriceController.text,
+                                );
+                              }
+
+                              // Apply price filters
+                              _productController.setMinPrice(minPrice);
+                              _productController.setMaxPrice(maxPrice);
+
+                              // Apply category filter
                               _productController.setSelectedCategory(
                                 _selectedCategory,
                               );
+
+                              // Apply all filters and fetch products
+                              _productController.fetchProducts(reset: true);
+
                               Navigator.pop(context);
                             },
                             style: ElevatedButton.styleFrom(
@@ -324,7 +347,6 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                 ),
-
                 // Filter Icon
                 SizedBox(width: 10),
                 IconButton(
@@ -340,7 +362,6 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-
           Expanded(
             child: Obx(() {
               if (_productController.isLoading &&
@@ -349,7 +370,6 @@ class _HomePageState extends State<HomePage> {
                   child: CircularProgressIndicator(color: Colors.black),
                 );
               }
-
               if (_productController.products.isEmpty) {
                 return Center(
                   child: Text(
@@ -358,7 +378,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
               }
-
               return CustomScrollView(
                 controller: _scrollController,
                 slivers: [
@@ -389,7 +408,6 @@ class _HomePageState extends State<HomePage> {
                       );
                     }, childCount: _productController.products.length),
                   ),
-
                   SliverToBoxAdapter(
                     child: Obx(() {
                       if (_productController.isFetchingMore) {
@@ -490,7 +508,6 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 // Product Details
                 Expanded(
                   child: Padding(
@@ -519,7 +536,6 @@ class ProductCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
