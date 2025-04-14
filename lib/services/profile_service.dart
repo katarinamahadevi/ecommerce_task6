@@ -6,21 +6,23 @@ import '../models/user_model.dart';
 
 class ProfileService extends GetxService {
   final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: 'https://tokopaedi.arfani.my.id/api/',
-      connectTimeout: Duration(seconds: 10),
-      receiveTimeout: Duration(seconds: 10),
-      headers: {'Accept': 'application/json'},
-    ),
-  )
-  ..interceptors.add(PrettyDioLogger(
-      requestHeader: true,
-      requestBody: true,
-      responseHeader: true,
-      responseBody: true,
-      compact: true,
-      maxWidth: 90,
-    ));
+      BaseOptions(
+        baseUrl: 'https://tokopaedi.arfani.my.id/api/',
+        connectTimeout: Duration(seconds: 10),
+        receiveTimeout: Duration(seconds: 10),
+        headers: {'Accept': 'application/json'},
+      ),
+    )
+    ..interceptors.add(
+      PrettyDioLogger(
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
+        compact: true,
+        maxWidth: 90,
+      ),
+    );
 
   final StorageService _storageService = Get.put(
     StorageService(),
@@ -61,7 +63,7 @@ class ProfileService extends GetxService {
 
     try {
       final response = await _dio.post(
-        'user/update', 
+        'user/update',
         data: {'name': name, 'password': password},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
