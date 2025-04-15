@@ -99,7 +99,29 @@ class AuthService extends GetxService {
       return {'success': false, 'message': 'An unexpected error occurred'};
     }
   }
+
   Future<void> logout() async {
-  await StorageService.removeToken();
-}
+    try {
+      String? token = await StorageService.getToken();
+      if (token == null) throw Exception("No token found");
+
+      final response = await _dio.post(
+        'logout',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        print(response.data['message']);
+        await StorageService.removeToken();
+      } else {
+        throw Exception('Logout failed: ${response.data['message']}');
+      }
+    } on DioException catch (e) {
+      print('Logout DioError: ${e.response?.data}');
+      throw Exception(e.response?.data?['message'] ?? 'Logout network error');
+    } catch (e) {
+      print('Logout error: $e');
+      throw Exception('An unexpected logout error occurred');
+    }
+  }
 }

@@ -9,7 +9,7 @@ class ProfilePage extends StatelessWidget {
   final ProfileController _profileController = Get.put(ProfileController());
   final AuthController _authController = Get.put(
     AuthController(),
-  ); // <- tambahkan ini
+  ); 
 
   @override
   Widget build(BuildContext context) {
@@ -113,9 +113,7 @@ class ProfilePage extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () async {
                       await _authController.logout();
-                      Get.offAllNamed(
-                        '/onboarding',
-                      ); 
+                      Get.offAllNamed('/onboarding');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade400,

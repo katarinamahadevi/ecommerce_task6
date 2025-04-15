@@ -20,12 +20,12 @@ class CartController extends GetxController {
   }
 
   Future<void> fetchCartItems() async {
-    if (_authController.user == null) return;
+    // if (_authController.user == null) return;
 
     isLoading(true);
     try {
       final cartData = await CartService.fetchCartItems(
-        _authController.user!.id,
+        // _authController.user!.id,
       );
       cartItems.value = cartData;
       _calculateTotalPrice();
@@ -37,10 +37,10 @@ class CartController extends GetxController {
   }
 
   Future<void> addToCart(ProductModel product, {int quantity = 1}) async {
-    if (_authController.user == null) {
-      Get.snackbar('Error', 'Please login to add items to cart');
-      return;
-    }
+    // if (_authController.user == null) {
+    //   Get.snackbar('Error', 'Please login to add items to cart');
+    //   return;
+    // }
 
     isLoading(true);
     try {
@@ -134,7 +134,20 @@ class CartController extends GetxController {
       await CartService.removeFromCart(cartItem.id);
       await CartService.addToCart(cartItem.product, newQuantity);
 
-      await fetchCartItems();
+      int index = cartItems.indexWhere((item) => item.id == cartItem.id);
+      if (index != -1) {
+        cartItems[index] = CartModel(
+          id: cartItem.id,
+          product: cartItem.product,
+          productId: cartItem.productId,
+          userId: cartItem.userId,
+          quantity: newQuantity,
+          createdAt: cartItem.createdAt,
+          updatedAt: DateTime.now(),
+        );
+        cartItems.refresh();
+        _calculateTotalPrice();
+      }
     } catch (e) {
       Get.snackbar("Error", "Failed to update quantity: $e");
     } finally {

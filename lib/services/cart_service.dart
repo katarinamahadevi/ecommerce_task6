@@ -26,7 +26,7 @@ class CartService {
   }
 
   // Get all cart items
-  static Future<List<CartModel>> fetchCartItems(int userId) async {
+  static Future<List<CartModel>> fetchCartItems() async {
     String? token = await StorageService.getToken();
     try {
       final response = await _dio.get(

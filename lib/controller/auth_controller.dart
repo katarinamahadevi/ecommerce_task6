@@ -27,6 +27,8 @@ class AuthController extends GetxController {
       if (result['success']) {
         _user.value = result['user'];
         _authToken = result['token'];
+              // await StorageService.saveToken(_authToken!);
+
         _isLoading.value = false;
         return true;
       } else {
@@ -64,15 +66,20 @@ class AuthController extends GetxController {
   }
 
   Future<void> logout() async {
-    _isLoading.value = true;
-    try {
-      await _authService.logout();
-      _user.value = null;
-      _authToken = null;
-    } catch (e) {
-      print("Logout error: $e");
-    } finally {
-      _isLoading.value = false;
-    }
+  _isLoading.value = true;
+  try {
+    await _authService.logout();
+    _user.value = null;
+    _authToken = null;
+    await StorageService.removeToken();
+
+    // Opsional: Arahkan ke halaman login
+    // Get.offAllNamed('/login');
+  } catch (e) {
+    print("Logout error: $e");
+    _errorMessage.value = e.toString();
+  } finally {
+    _isLoading.value = false;
   }
+}
 }
